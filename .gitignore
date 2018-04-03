@@ -1,5 +1,4 @@
 .*
 !.gitignore
-vendor/
 runtime/
 composer.lock
