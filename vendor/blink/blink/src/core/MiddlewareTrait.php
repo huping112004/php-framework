@@ -31,6 +31,7 @@ trait MiddlewareTrait
         } else {
             $this->middleware[] = $definition;
         }
+        //print_r($this->middleware);
     }
 
     /**
@@ -43,13 +44,16 @@ trait MiddlewareTrait
         if ($this->_middlewareCalled) {
             return;
         }
+        echo '888888888888';
+        print_r($this->middleware);
 
         foreach ($this->middleware as $definition) {
+
             $middleware = make($definition);
             if (!$middleware instanceof MiddlewareContract) {
                 throw new InvalidConfigException(sprintf("'%s' is not a valid middleware", get_class($middleware)));
             }
-
+            print_r($this);
             if ($middleware->handle($this) === false) {
                 break;
             }

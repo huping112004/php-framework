@@ -22,6 +22,7 @@ REGEX;
     const DEFAULT_DISPATCH_REGEX = '[^/]+';
 
     public function parse($route) {
+
         $routeWithoutClosingOptionals = rtrim($route, ']');
         $numOptionals = strlen($route) - strlen($routeWithoutClosingOptionals);
 
@@ -45,6 +46,7 @@ REGEX;
             $currentRoute .= $segment;
             $routeDatas[] = $this->parsePlaceholders($currentRoute);
         }
+
         return $routeDatas;
     }
 

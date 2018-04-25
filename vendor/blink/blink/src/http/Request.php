@@ -47,7 +47,8 @@ class Request extends Object implements ShouldBeRefreshed
     public $queryString = '';
 
     public $method = 'GET';
-
+    private $_route;
+    public $abort = false;
     /**
      * The key of a header field that stores the session id, or a callable that will returns the session id.
      * The following is the signature of the callable:
@@ -111,7 +112,16 @@ class Request extends Object implements ShouldBeRefreshed
 
         return 'HTTPS' === explode('/', $this->protocol)[0];
     }
+    public function setRoute(\blink\core\Route $route)
+    {
+        $this->setParams($route->getParams());
+        $this->_route = $route;
+    }
 
+    public function getRoute()
+    {
+        return $this->_route;
+    }
     private $_params;
 
     public function setParams($params = [])
@@ -136,7 +146,10 @@ class Request extends Object implements ShouldBeRefreshed
 
         return $this->_params = new ParamBag($params);
     }
-
+    public function set($key, $value)
+    {
+        return $this->_params->set($key, $value);
+    }
     private $_headers;
 
     public function setHeaders($headers = [])
@@ -267,7 +280,10 @@ class Request extends Object implements ShouldBeRefreshed
     {
         return $this->path;
     }
-
+    public function sethost()
+    {
+        return $this->path;
+    }
     public function root()
     {
         return ($this->secure() ? 'https' : 'http') . '://' . $this->host();
@@ -455,4 +471,36 @@ class Request extends Object implements ShouldBeRefreshed
     {
         return $this->user() === null;
     }
+
+    public function setGlobal($params = [])
+    {
+        if (is_null($this->_global)) {
+            $this->_global = $params;
+        } else {
+            $this->_global += $params;
+        }
+        return $this->_global;
+    }
+
+    public function getGlobal($key = '')
+    {
+        if (!empty($key)) {
+            return array_get($this->_global, $key);
+        }
+        return $this->_global;
+    }
+    public function showError($error = 'System Error', $code = 10000)
+    {
+        response()->json(errorFormat($error, $code));
+        request()->abort = true;
+        return true;
+    }
+
+    public function showSuccess(array $data, $code = 200)
+    {
+        response()->json(successFormat($data, $code));
+        request()->abort = true;
+        return true;
+    }
+
 }

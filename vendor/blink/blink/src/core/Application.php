@@ -92,11 +92,12 @@ class Application extends ServiceLocator
 
     protected $router;
     private $_configs;
-   /* public function __construct()
-    {
-        parent::__construct($this->config('application')->all());
-    }
-   */
+
+    /* public function __construct()
+     {
+         parent::__construct($this->config('application')->all());
+     }
+    */
 
     public function init()
     {
@@ -105,7 +106,7 @@ class Application extends ServiceLocator
         }
 
         $this->router = $this->createRouter();
-
+        //var_dump($this->router);
         Container::$app = $this;
         Container::$instance = new Container();
     }
@@ -115,6 +116,7 @@ class Application extends ServiceLocator
      */
     public function bootstrap()
     {
+
         $this->bootstrapIfNeeded();
     }
 
@@ -137,7 +139,7 @@ class Application extends ServiceLocator
 
                 $this->lastError = $e;
                 $this->get('log')
-                     ->emergency($e);
+                    ->emergency($e);
             } catch (\Throwable $e) {
                 if ($this->environment === 'test') {
                     throw $e;
@@ -145,7 +147,7 @@ class Application extends ServiceLocator
 
                 $this->lastError = $e;
                 $this->get('log')
-                     ->emergency($e);
+                    ->emergency($e);
             }
         }
 
@@ -199,16 +201,25 @@ class Application extends ServiceLocator
 
     protected function registerRoutes()
     {
+        // var_dump($this->routes);
         if (is_string($this->routes)) {
             $this->routes = require $this->routes;
-        }
 
+        }
+       // $this->dispatcher = new Dispatcher();
+       // $this->dispatcher->getRouter()->setConfig($this->routes);
+        //$router = new Router();
         foreach ($this->routes as $value) {
+            //$router = new Router;
+            //($router->addGroup($value);
+            //$prefix = $value['prefix'];
+           // $value = $value['routes'];
             if (!is_array($value[0]) && is_array($value[1])) {
                 $this->group($value[0], $value[1]);
             } else {
                 $this->route($value[0], $value[1], $value[2]);
             }
+
         }
     }
 
@@ -336,11 +347,11 @@ class Application extends ServiceLocator
         } catch (\Exception $e) {
             $response->data = $e;
             $this->get('errorHandler')
-                 ->handleException($e);
+                ->handleException($e);
         } catch (\Throwable $e) {
             $response->data = $e;
             $this->get('errorHandler')
-                 ->handleException($e);
+                ->handleException($e);
         }
 
         try {
@@ -393,66 +404,104 @@ class Application extends ServiceLocator
         }
     }
 
-    protected function exec($request, $response)
+   protected function exec($request, $response)
     {
         list($handler, $args) = $this->dispatch($request);
-
+       // print_r($args);
         $action = $this->createAction($handler);
+        // 中止继续访问
 
         $request->callMiddleware();
-
+        if ($request->abort == true) {
+            echo '55555555555';
+            return;
+        }
         $data = $this->runAction($action, $args, $request, $response);
 
         if (!$data instanceof Response && $data !== null) {
             $response->with($data);
         }
     }
+    /*
+   protected function exec(Request $request, Response $response)
+   {
+       $route = $this->dispatch($request);
 
-    protected function refreshServices()
-    {
-        foreach ($this->refreshing as $id => $_) {
-            $this->unbind($id);
-            $this->bind($id, $this->services[$id]);
-        }
-    }
+       $request->setRoute($route);
 
-    protected function exceptionToArray($exception)
-    {
-        $array = [
-            'name' => get_class($exception),
-            'message' => $exception->getMessage(),
-            'code' => $exception->getCode(),
-        ];
-        if ($exception instanceof HttpException) {
-            $array['status'] = $exception->statusCode;
-        }
-        if ($this->debug) {
-            $array['file'] = $exception->getFile();
-            $array['line'] = $exception->getLine();
-            $array['trace'] = explode("\n", $exception->getTraceAsString());
-        }
+       $action = $this->createAction($route);
 
-        if (($prev = $exception->getPrevious()) !== null) {
-            $array['previous'] = $this->exceptionToArray($prev);
-        }
+       // 中止继续访问
+       if ($request->abort == true) {
+           return;
+       }
 
-        return $array;
-    }
+       $request->callMiddleware();
 
-    protected function dispatch($request)
-    {
-        $info = $this->getDispatcher()->dispatch($request->method, $request->path);
+       $response->setPrefix($route->getPrefix());
 
-        switch ($info[0]) {
-            case FastRoute\Dispatcher::NOT_FOUND:
-                throw new HttpException(404);
-            case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
-                //$allowedMethods = $info[1];
-                throw new HttpException(405);
-            case FastRoute\Dispatcher::FOUND:
+       $data = $this->runAction($action, $request, $response);
 
-                return [$info[1], $info[2]];
-        }
+       if (!$data instanceof Response && $data !== null) {
+           $response->with($data);
+       }
+   }
+    */
+   protected function refreshServices()
+   {
+       foreach ($this->refreshing as $id => $_) {
+           $this->unbind($id);
+           $this->bind($id, $this->services[$id]);
+       }
+   }
+
+   protected function exceptionToArray($exception)
+   {
+       $array = [
+           'name' => get_class($exception),
+           'message' => $exception->getMessage(),
+           'code' => $exception->getCode(),
+       ];
+       if ($exception instanceof HttpException) {
+           $array['status'] = $exception->statusCode;
+       }
+       if ($this->debug) {
+           $array['file'] = $exception->getFile();
+           $array['line'] = $exception->getLine();
+           $array['trace'] = explode("\n", $exception->getTraceAsString());
+       }
+
+       if (($prev = $exception->getPrevious()) !== null) {
+           $array['previous'] = $this->exceptionToArray($prev);
+       }
+
+       return $array;
+   }
+
+   protected function dispatch($request)
+   {
+       /*if (!$route = $this->dispatcher->dispatch($request)) {
+           throw new HttpException(404);
+       }
+
+       return $route;*/
+
+
+       $info = $this->getDispatcher()->dispatch($request->method, $request->path);
+        print_r($info);
+       switch ($info[0]) {
+           case FastRoute\Dispatcher::NOT_FOUND:
+               print_r($request->path);
+               echo 'tttttttttttt';
+               throw new HttpException(404);
+           case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+               //$allowedMethods = $info[1];
+               throw new HttpException(405);
+           case FastRoute\Dispatcher::FOUND:
+
+               return [$info[1], $info[2]];
+       }
+
     }
 
     protected function createAction($handler)
@@ -460,8 +509,10 @@ class Application extends ServiceLocator
         if ($handler instanceof Closure) {
             $action = $handler;
         } else {
+
             if (($pos = strpos($handler, '@')) !== false) {
                 $class = substr($handler, 0, $pos);
+
                 $method = substr($handler, $pos + 1);
 
                 if ($class[0] !== '\\' && $this->controllerNamespace) {
@@ -470,6 +521,7 @@ class Application extends ServiceLocator
                 }
 
                 $action = [$this->get($class), $method];
+
             } else {
                 throw new HttpException(404);
             }
@@ -477,6 +529,22 @@ class Application extends ServiceLocator
 
         return $action;
     }
+    /*
+    protected function createAction(Route $route)
+    {
+        $class = "App\\" . ucfirst($route->getModule()) . "\\Controller\\" . ucfirst($route->getPrefix()) . "\\" . ucfirst($route->getController()) . "Controller";
+
+        $method = $route->getAction();
+
+        $controller = $this->get($class);
+
+        $controller->callMiddleware();
+
+        $action = [$controller, $method];
+
+        return $action;
+    }
+    */
 
     protected function runAction($action, $args, $request, $response)
     {
@@ -487,7 +555,10 @@ class Application extends ServiceLocator
 
         $this->afterAction($action, $request, $response);
 
+       // $data = call_user_func_array($action, [$request, $response]);
+
         return $data;
+        //return $data;
     }
 
     protected function beforeAction($action, $request)
@@ -522,6 +593,7 @@ class Application extends ServiceLocator
     public function shutdown()
     {
     }
+
     public function config($config_group)
     {
         if (!isset($this->_configs[$config_group])) {

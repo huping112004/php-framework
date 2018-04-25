@@ -152,6 +152,7 @@ class SwServer extends Server
 
     public function onWorkerStart()
     {
+        echo("application started\r\n");
         $this->setProcessTitle($this->name . ': worker');
 
         $this->startApp();
@@ -196,20 +197,31 @@ class SwServer extends Server
 
     protected function prepareRequest($request)
     {
+        $port = 80;
+        $hosts = explode(':', $request->header['host']);
+
+        if (count($hosts) > 1) {
+            $port = $hosts[1];
+        }
+        $host = $hosts[0];
         $config = [
             'protocol' => $request->server['server_protocol'],
+            'host' => $host,
+            //'port' => $port,
             'method' => $request->server['request_method'],
             'path' => $request->server['request_uri'],
             'headers' => $request->header,
-            'params' => isset($request->get) ? $request->get : [],
-            'cookies' => isset($request->cookie) ? $request->cookie : [],
-            'content' => $request->rawContent()
+            'params' => isset($request->get) ? $request->get : ( isset($request->post) ? $request->post : [] ),
+            'content' => $request->rawcontent(),
+            //'server' => $request->server,
         ];
 
         if (!empty($request->files)) {
             $config['files'] = $this->normalizeFiles($request->files);
         }
-
+        if (isset($request->cookie) && is_array($request->cookie)) {
+           // $config['cookie'] = $request->cookie;
+        }
         return app()->makeRequest($config);
     }
 

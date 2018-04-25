@@ -192,4 +192,60 @@ class Response extends Object implements ShouldBeRefreshed
 
         return $this->content;
     }
+    public function initView()
+    {
+        if (!$this->view) {
+            $this->view = new \Kerisy\Http\View($this->prefix);
+        }
+    }
+
+    public function assign($key, $value)
+    {
+        $this->attach[$key] = $value;
+    }
+
+    public function view($template, $data = [])
+    {
+        $this->initView();
+        if (!is_null($this->attach) && is_array($this->attach)) {
+            $data += $this->attach;
+        }
+
+        $configObj = new Config("config");
+        $templateConfig = $configObj->get("template_engine");
+        $templateConfig = $templateConfig?$templateConfig:"default";
+
+        if($templateConfig == 'blade'){
+            $viewPath = APPLICATION_PATH . 'views/' ;
+            $compilePath = APPLICATION_PATH . "/runtime/complie/";
+            if (!is_dir($compilePath)) {
+                mkdir($compilePath, 0777, true);
+            }
+            $obj = new Blade($viewPath, $compilePath);
+
+            $template = $this->view->getTplPath($template);
+            $template = str_replace("\\",".",$template);
+
+            $html = $obj->render($template, $data);
+            $this->data = $html;
+        }
+        else{
+            $this->view->replace($data);
+            $this->data = $this->view->render($template);
+        }
+
+        $this->headers->set('Content-Type', 'text/html');
+
+        return $this;
+    }
+
+
+    public function json($data = [])
+    {
+        $this->data = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+        $this->headers->set('Content-Type', 'application/json; charset=UTF-8');
+
+        return $this;
+    }
 }

@@ -7,7 +7,6 @@ class Config extends Set
     public function __construct($config_group)
     {
         $ext_name = '.php';
-        echo '1111111111';
         $config_file = CONFIG_PATH . $config_group . $ext_name;
         /* 环境变量加载不同扩展名的配置文件 */
         $env_ext_name = (BLINK_ENV == 'development' ? '.dev' : (BLINK_ENV == 'test' ? '.test' : '')) . $ext_name;

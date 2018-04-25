@@ -8,6 +8,7 @@ class GroupCountBased extends RegexBasedAbstract {
     }
 
     protected function processChunk($regexToRoutesMap) {
+
         $routeMap = [];
         $regexes = [];
         $numGroups = 0;

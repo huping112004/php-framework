@@ -113,3 +113,26 @@ function abort($status, $message = null)
 function config($config) {
     return app()->config($config);
 }
+if (!function_exists('successFormat')) {
+
+    function successFormat($data, $code = 200) {
+        $dataNew = [
+            'http_code' => $code,
+            'data' => $data,
+        ];
+       return $dataNew;
+    }
+
+}
+if (!function_exists('errorFormat')) {
+
+    function errorFormat($msg, $code = 400) {
+
+
+    return [
+         'http_code' => (int) $code,
+         'msg' => $msg
+       ];
+    }
+
+}
