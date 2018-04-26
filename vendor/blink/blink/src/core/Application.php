@@ -488,12 +488,19 @@ class Application extends ServiceLocator
 
 
        $info = $this->getDispatcher()->dispatch($request->method, $request->path);
-        print_r($info);
+
        switch ($info[0]) {
            case FastRoute\Dispatcher::NOT_FOUND:
-               print_r($request->path);
-               echo 'tttttttttttt';
-               throw new HttpException(404);
+               $url = explode("/",$request->path);
+              // print_r($url);
+               if(count($url)>=3){
+                   $info[1] = "\app\\".ucfirst($url[1])."\\controllers\\".ucfirst($url[2])."Controller@".$url[3];
+                   $info[2] = array();
+                   return [$info[1], $info[2]];
+               }else{
+                   throw new HttpException(404);
+               }
+
            case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                //$allowedMethods = $info[1];
                throw new HttpException(405);

@@ -14,13 +14,12 @@ class IndexController
         $this->request = $request;
         $this->middleware = ['app\middleware\Auth'];
         $request = request();
-        $request->middleware([
+        /*$request->middleware([
             'class' => \app\middleware\Auth::class,
             'identity' => 'id',
         ]);
-
         $request->callMiddleware();
-
+        */
         //response()->middleware(\app\middleware\Auth::class, true);
        // request()->abort = true;
     }
@@ -41,8 +40,10 @@ class IndexController
         return 'Hello world, 2222222.';
     }
 
-    public function test()
+    public function test(Request $request)
     {
-        return 'Hello world, test.';
+        $params = $request->all();
+        print_r($params);
+        return 'Hello world, test.111111111';
     }
 }

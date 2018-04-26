@@ -21,8 +21,7 @@ class IndexController
         //$database = app()->config('database');
         // print_r($database);
         $result = UserWx::first();
-        print_r($result);
-        echo '111111111111';
+
         return 'Hello world, testdddd.';
     }
 
